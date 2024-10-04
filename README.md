@@ -1,4 +1,4 @@
-# plenoptic-docs
+# plenoptic-workshops
 
 > [!CAUTION]
 > This repo should not be edited manually.
