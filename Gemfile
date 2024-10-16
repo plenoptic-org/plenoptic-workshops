@@ -19,6 +19,10 @@ gem "jekyll", "~> 4.3.4"
 #   gem "tzinfo-data"
 # end
 
+group :jekyll_plugins do
+  gem "jekyll-tabs"
+end
+
 # Performance-booster for watching directories on Windows
 # gem "wdm", "~> 0.1.1", :platforms => [:mingw, :x64_mingw, :mswin]
 

@@ -1,19 +1,43 @@
-{% if include.cards %}
-  {% assign filtered_cards = site.cards | where_exp: 'card', "include.cards contains card.title" %}
-{% else %}
-  {% assign filtered_cards = site.cards %}
-{% endif %}
-
 <div class="grid cards">
 <ul>
-    {% for card in filtered_cards %}
+    {% for card in site.workshops %}
     <li>
-        <h3><iconify-icon class="emoji {{ card.class }}" icon="{{ card.icon }}"></iconify-icon>
-            <a href="{{ card.external_url }}">{{ card.name }}</a></h3>
-        {% unless card.content.size == 1 %}
+        <h3>
+            {%- if card.external_url.size > 0 -%}
+            <a href="{{ card.external_url }}">{{ card.name }}</a>
+            {%- else -%}
+            {{ card.name }}
+            {%- endif -%}
+        </h3>
+        {%- if card.releases.size > 0 or card.pulls.size > 0 -%}
         <hr>
-        {{ card.content }}
-        {% endunless %}
+        {% tabs links %}
+        {%- if card.releases.size > 0 -%}
+        {% tab links releases %}
+<!-- these have to be unindented all the way, or the tab gets confused -->
+<ul class='lists'>
+    {% for rls in card.releases %}
+    <li>
+        <a href="{{ card.base_url }}/tags/{{ rls }}">{{ rls }}</a>
+    </li>
+    {% endfor %}
+</ul>
+        {% endtab %}
+        {%- endif -%}
+        {% if card.pulls.size > 0 %}
+        {% tab links pull requests %}
+<!-- these have to be unindented all the way, or the tab gets confused -->
+<ul class='lists'>
+    {% for pull in card.pulls %}
+    <li>
+        <a href="{{ card.base_url }}/pulls/{{ pull }}">{{ pull }}</a>
+    </li>
+    {% endfor %}
+</ul>
+        {% endtab %}
+        {% endif %}
+        {% endtabs %}
+        {%- endif -%}
     </li>
     {% endfor %}
 </ul>

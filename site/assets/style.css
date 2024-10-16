@@ -170,7 +170,7 @@ footer img {
 .grid {
   grid-gap:.5rem;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(min(50%,8rem),.5fr));
+  grid-template-columns:repeat(auto-fit,minmax(min(50%,8rem),.25fr));
   margin:3em 0
 }
 .grid.cards>ol,
@@ -220,6 +220,14 @@ footer img {
     /* justify-content: space-between; */
     height: 100%;
     box-sizing: border-box;
+}
+
+.grid.cards ul.lists > li:first-of-type {
+  margin-top: 10px;
+}
+
+.grid.cards ul.lists > li {
+  display: list-item
 }
 
 /* Center the icon and title within the first paragraph */
