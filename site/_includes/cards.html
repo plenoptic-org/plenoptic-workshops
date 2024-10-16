@@ -1,0 +1,20 @@
+{% if include.cards %}
+  {% assign filtered_cards = site.cards | where_exp: 'card', "include.cards contains card.title" %}
+{% else %}
+  {% assign filtered_cards = site.cards %}
+{% endif %}
+
+<div class="grid cards">
+<ul>
+    {% for card in filtered_cards %}
+    <li>
+        <h3><iconify-icon class="emoji {{ card.class }}" icon="{{ card.icon }}"></iconify-icon>
+            <a href="{{ card.external_url }}">{{ card.name }}</a></h3>
+        {% unless card.content.size == 1 %}
+        <hr>
+        {{ card.content }}
+        {% endunless %}
+    </li>
+    {% endfor %}
+</ul>
+</div>
