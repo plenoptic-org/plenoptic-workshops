@@ -12,7 +12,8 @@
                 <img alt="GitHub Repo" src="https://img.shields.io/badge/GitHub-gray?logo=github">
             </a>
         </h3>
-        {%- if card.releases.size > 0 or card.pulls.size > 0 or card.branches.size > 0 -%}
+        {% assign branches = card.branches | where_exp: "item", "item != 'main'" %}
+        {%- if card.releases.size > 0 or card.pulls.size > 0 or branches.size > 0 -%}
         <hr>
         {% tabs links %}
         {%- if card.releases.size > 0 -%}
@@ -39,11 +40,11 @@
 </ul>
         {% endtab %}
         {% endif %}
-        {% if card.branches.size > 0 %}
+        {% if branches.size > 0 %}
         {% tab links branches %}
 <!-- these have to be unindented all the way, or the tab gets confused -->
 <ul class='lists'>
-    {% for branch in card.branches %}
+    {% for branch in branches %}
     <li>
         <a href="{{ card.base_url }}/branch/{{ branch }}">{{ branch }}</a>
     </li>

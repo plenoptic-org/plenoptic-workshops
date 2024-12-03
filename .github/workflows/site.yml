@@ -43,7 +43,7 @@ jobs:
 
     - name: Build
       run: |
-        python scripts/create_workshop_md.py
+        python scripts/create_collection_md.py --subdir_index redirect
         bundle exec jekyll build --verbose -d ./_site
 
     - name: Upload artifact
