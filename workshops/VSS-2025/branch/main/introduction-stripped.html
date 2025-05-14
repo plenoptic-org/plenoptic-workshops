@@ -399,7 +399,7 @@ document.write(`
 <p class="admonition-title">Download</p>
 <p>This notebook can be downloaded as <strong><a class="reference download internal" download="" href="_downloads/dbf6e61da9e91ccf52bab94fae2ee5d8/introduction-stripped.ipynb"><code class="xref download myst-nb docutils literal notranslate"><span class="pre">introduction-stripped.ipynb</span></code></a></strong>. See the button at the top right to download as markdown or pdf.</p>
 </div>
-<section id="introduction-text-removed">
+<section class="tex2jax_ignore mathjax_ignore" id="introduction-text-removed">
 <h1>Introduction, Text Removed<a class="headerlink" href="#introduction-text-removed" title="Link to this heading">#</a></h1>
 <p>This notebook has had all its explanatory text removed and has not been run.
 It is intended to be downloaded and run locally (or on the provided binder)
@@ -455,9 +455,9 @@ rendered of this notebook, go <a class="reference internal" href="introduction.h
 <p>Set up the Guassian model. Models in plenoptic must:</p>
 <ul class="simple">
 <li><p>Inherit <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>.</p></li>
-<li><p>Accept 4d tensors as input and return 3d or 4d tensors as output.</p></li>
+<li><p>Accept tensors as input and return tensors as output.</p></li>
 <li><p>Have <code class="docutils literal notranslate"><span class="pre">forward</span></code> and <code class="docutils literal notranslate"><span class="pre">__init__</span></code> methods.</p></li>
-<li><p>Have all gradients removed.</p></li>
+<li><p>Have all model parameter gradients removed.</p></li>
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -885,9 +885,8 @@ rendered of this notebook, go <a class="reference internal" href="introduction.h
 </section>
 <section id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading">#</a></h2>
-<img src="_static/plan.svg">
 <p>In this notebook, we saw the basics of using <code class="docutils literal notranslate"><span class="pre">plenoptic</span></code> to investigate the sensitivities and invariances of some simple convolutional models, and reasoned through how the model metamers and eigendistortions we saw enable us to understand how these models process images.</p>
-<p><code class="docutils literal notranslate"><span class="pre">plenoptic</span></code> includes a variety of models and model components in the <a class="reference external" href="https://plenoptic.readthedocs.io/en/latest/api/plenoptic.simulate.html">plenoptic.simulate</a> module, and you can (and should!) use the synthesis methods with your own models. Our documentation also has <a class="reference external" href="https://plenoptic.readthedocs.io/en/latest/tutorials/applications/Demo_Eigendistortion.html">examples</a> showing how to use models from <a class="reference external" href="https://pytorch.org/vision/stable/index.html">torchvision</a> (which contains a variety of pretrained neural network models) with plenoptic. In order to use your own models with plenoptic, check the <a class="reference external" href="https://plenoptic.readthedocs.io/en/latest/models.html">documentation</a> for the specific requirements, and use the <a class="reference external" href="https://plenoptic.readthedocs.io/en/latest/api/plenoptic.tools.html#plenoptic.tools.validate.validate_model"><code class="docutils literal notranslate"><span class="pre">validate_model</span></code></a> function to check compatibility. If you have issues or want feedback, we’re happy to help — just post on the <a class="reference external" href="https://github.com/plenoptic-org/plenoptic/discussions">Github discussions page</a>!</p>
+<p><code class="docutils literal notranslate"><span class="pre">plenoptic</span></code> includes a variety of models and model components in the <a class="reference external" href="https://docs.plenoptic.org/docs/branch/main/api/plenoptic.simulate.html">plenoptic.simulate</a> module, and you can (and should!) use the synthesis methods with your own models. Our documentation also has <a class="reference external" href="https://docs.plenoptic.org/docs/branch/main/tutorials/applications/Demo_Eigendistortion.html">examples</a> showing how to use models from <a class="reference external" href="https://pytorch.org/vision/stable/index.html">torchvision</a> (which contains a variety of pretrained neural network models) with plenoptic (we’ll be releasing a simpler interface for torchvision and other pytorch model zoos this summer – ask me if you’re interested!). In order to use your own models with plenoptic, check the <a class="reference external" href="https://docs.plenoptic.org/docs/branch/main/models.html">documentation</a> for the specific requirements, and use the <a class="reference external" href="https://docs.plenoptic.org/docs/branch/main/api/plenoptic.tools.html#plenoptic.tools.validate.validate_model"><code class="docutils literal notranslate"><span class="pre">validate_model</span></code></a> function to check compatibility. If you have issues or want feedback, we’re happy to help — just post on the <a class="reference external" href="https://github.com/plenoptic-org/plenoptic/discussions">Github discussions page</a>!</p>
 </section>
 </section>
 <hr class="footnotes docutils" />
@@ -898,7 +897,7 @@ rendered of this notebook, go <a class="reference internal" href="introduction.h
 </aside>
 <aside class="footnote brackets" id="notallmodels" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
-<p>Note that the Berardino et. al, 2017 paper includes more models than described here. We’re not examining all of them for time’s sake, but you can check out the rest of the models described in the Berardino paper, they’re all included in plenoptic under the <a class="reference external" href="https://plenoptic.readthedocs.io/en/latest/api/plenoptic.simulate.models.html#module-plenoptic.simulate.models.frontend">plenoptic.simulate.FrontEnd</a> module!</p>
+<p>Note that the Berardino et. al, 2017 paper includes more models than described here. We’re not examining all of them for time’s sake, but you can check out the rest of the models described in the Berardino paper, they’re all included in plenoptic under the <a class="reference external" href="https://docs.plenoptic.org/docs/branch/main/api/plenoptic.simulate.models.html#module-plenoptic.simulate.models.frontend">plenoptic.simulate.FrontEnd</a> module!</p>
 </aside>
 </aside>
 

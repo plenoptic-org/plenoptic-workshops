@@ -380,7 +380,13 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-virtual-environment-with-python-3-11">Create a virtual environment with python 3.11</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dependencies-and-setup-notebooks">Install dependencies and setup notebooks</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#binder">Binder</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contents">Contents</a></li>
 </ul>
@@ -394,7 +400,7 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="welcome-to-plenoptic-satellite-event-vss-2025">
+  <section class="tex2jax_ignore mathjax_ignore" id="welcome-to-plenoptic-satellite-event-vss-2025">
 <h1>Welcome to plenoptic satellite event, VSS 2025<a class="headerlink" href="#welcome-to-plenoptic-satellite-event-vss-2025" title="Link to this heading">#</a></h1>
 <p>This site hosts the example notebook used for the plenoptic satellite event at VSS 2025. This three hour session aims to introduce the basics of using plenoptic in order to better understand computational visual models with simple examples. We hope to explain not just <code class="docutils literal notranslate"><span class="pre">plenoptic</span></code>’s syntax but also the type of reasoning that it facilitates.</p>
 <p>The presentation I gave at the beginning of this session can be found <a class="reference external" href="https://presentations.plenoptic.org/2025-05-16_vss-symposium/slides.html">here</a>.</p>
@@ -407,60 +413,54 @@ document.write(`
 <p class="admonition-title">Note</p>
 <p>If you would just like to install <code class="docutils literal notranslate"><span class="pre">plenoptic</span></code> to use it locally, follow <a class="reference external" href="https://plenoptic.readthedocs.io/en/latest/install.html">our installation instructions</a>. This tutorial contains some extra packages for this specific build.</p>
 </div>
-<p>While we’ll use the binder during this tutorial, if you’d like to run the notebooks locally, you’ll need to set up a local environment. To do so:</p>
+<p>Before the event, please try to complete the following steps. If you are unable to do so, try to arrive to the event 30 minutes early so we can get it straightened out!</p>
 <ol class="arabic" start="0">
 <li><p>Make sure you have <code class="docutils literal notranslate"><span class="pre">git</span></code> installed. It is installed by default on most Mac and Linux machines, but you may need to install it if you are on Windows. <a class="reference external" href="https://github.com/git-guides/install-git">These instructions</a> should help.</p></li>
-<li><p>Clone the github repo for this tutorial:</p>
+<li><p>Clone the github repo for this workshop:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/plenoptic-org/plenoptic-vss-2025.git
 </pre></div>
 </div>
 </li>
-<li><p>Create a new python 3.11 virtual environment. If you do not have a preferred way of managing your python virtual environments, we recommend <a class="reference external" href="https://docs.anaconda.com/free/miniconda/">miniconda</a>. After installing it (if you have not done so already), run</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>vss2025<span class="w"> </span>pip<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
+</ol>
+<section id="create-a-virtual-environment-with-python-3-11">
+<h3>Create a virtual environment with python 3.11<a class="headerlink" href="#create-a-virtual-environment-with-python-3-11" title="Link to this heading">#</a></h3>
+<p>There are many ways to set up a python virtual environment. You can use your favorite way of doing so. If you don’t have a preference or don’t know what to do, choose one of the following:</p>
+<section id="install-dependencies-and-setup-notebooks">
+<h4>Install dependencies and setup notebooks<a class="headerlink" href="#install-dependencies-and-setup-notebooks" title="Link to this heading">#</a></h4>
+<ol class="arabic">
+<li><p>Install the required dependencies. This will install pynapple and nemos, as well as jupyter and several other packages.</p></li>
+<li><p>Run our setup script to download data and prepare the notebooks:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/setup.py
 </pre></div>
 </div>
 </li>
-<li><p>Activate your new environment:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>vss2025
+<li><p>Confirm the installation and setup completed correctly by running:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/check_setup.py
 </pre></div>
 </div>
 </li>
-<li><p>Navigate to the cloned github repo and install the required dependencies.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>plenoptic-vss-2025
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-</pre></div>
-</div>
+</ol>
+<p>If <code class="docutils literal notranslate"><span class="pre">check_setup.py</span></code> tells you setup was successful, then you’re good to go. Otherwise, please come to the satellite event room 30 minutes early on Monday, so we can get things going as quickly as possible.</p>
+<p>After doing the above, the <code class="docutils literal notranslate"><span class="pre">notebooks/</span></code> directories within your local copy of the <code class="docutils literal notranslate"><span class="pre">plenoptic-vss-2025</span></code> repository will contain the jupyter notebooks for the event.</p>
+<p>During the event, we will run through the notebooks in the order they’re listed on this website. To open them, navigate to the <code class="docutils literal notranslate"><span class="pre">notebooks/</span></code> directory, activate your virtual environment and start <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">lab</span></code>:</p>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
 <p>You will also need <code class="docutils literal notranslate"><span class="pre">ffmpeg</span></code> installed in order to view the videos in the notebook. This is likely installed on your system already if you are on Linux or Mac (run <code class="docutils literal notranslate"><span class="pre">ffmpeg</span></code> in your command line to check). If not, you can install it via conda: <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">-c</span> <span class="pre">conda-forge</span> <span class="pre">ffmpeg</span></code> or see their <a class="reference external" href="https://ffmpeg.org/download.html">install instructions</a>.</p>
 <p>If you have <code class="docutils literal notranslate"><span class="pre">ffmpeg</span></code> installed and are still having issues, try running <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">update</span> <span class="pre">ffmpeg</span></code>.</p>
 </div>
-</li>
-<li><p>Run the setup script to prepare the notebook:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/setup.py
-</pre></div>
-</div>
-<div class="admonition important">
-<p class="admonition-title">Important</p>
-<p>It’s possible this step will fail (especially if you are on Windows). If so, go to the <a class="reference internal" href="introduction-stripped.html"><span class="std std-doc">notebook on this site</span></a> and download it manually.</p>
-</div>
-</li>
-<li><p>Open up jupyter, then double-click on the <code class="docutils literal notranslate"><span class="pre">introduction-stripped.ipynb</span></code> notebook:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>jupyter<span class="w"> </span>lab
-</pre></div>
-</div>
-</li>
-</ol>
+</section>
+</section>
 </section>
 <section id="binder">
 <h2>Binder<a class="headerlink" href="#binder" title="Link to this heading">#</a></h2>
-<p>Some usage notes:</p>
+<p>A binder instance (a virtual environment running on Flatiron’s cluster) is provided in case we cannot get your installation working. To access it, click the “launch binder” button in the top left of this site or click <a class="reference external" href="https://binder.flatironinstitute.org/v2/user/wbroderick/vss2025?labpath=notebooks">here</a>.</p>
+<p>You must login with the email address you provided when registering for the workshop. If you get a <code class="docutils literal notranslate"><span class="pre">403</span> <span class="pre">Forbidden</span></code> error or would like to use a different email, send let Billy know.</p>
 <ul class="simple">
 <li><p>You are only allowed to have a single binder instance running at a time, so if you get the “already have an instance running error”, go to the <a class="reference external" href="https://binder.flatironinstitute.org/hub/hub/home">binderhub page</a> (or click on “check your currently running servers” on the right of the page) to join your running instance.</p></li>
 <li><p>If you lose connection halfway through the workshop, go to the <a class="reference external" href="https://binder.flatironinstitute.org/hub/hub/home">binderhub page</a> to join your running instance rather than restarting the image.</p></li>
 <li><p>This is important because if you restart the image, <strong>you will lose all data and progress</strong>.</p></li>
 <li><p>The binder will be shutdown automatically after 1 day of inactivity or 7 days of total usage. Data will not persist after the binder instance shuts down, so <strong>please download any notebooks</strong> you want to keep.</p></li>
-<li><p>I will destroy this instance in 2 weeks, so that you can use it to play around during the course. You can download your notebooks to keep them after the fact. If you do so, see the <a class="reference internal" href="#setup"><span class="xref myst">setup instructions</span></a> for how to create the environment for running them locally, and let me know if you have any problems!</p></li>
+<li><p>I will destroy this instance in 1 weeks, so that you can use it to play around during the conference. You can download your notebooks to keep them after the fact.</p></li>
 </ul>
 </section>
 <section id="contents">
@@ -529,7 +529,13 @@ notebooks.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-virtual-environment-with-python-3-11">Create a virtual environment with python 3.11</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dependencies-and-setup-notebooks">Install dependencies and setup notebooks</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#binder">Binder</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contents">Contents</a></li>
 </ul>
