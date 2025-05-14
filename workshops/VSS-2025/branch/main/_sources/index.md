@@ -4,7 +4,7 @@ This site hosts the example notebook used for the plenoptic satellite event at V
 
 The presentation I gave at the beginning of this session can be found [here](https://presentations.plenoptic.org/2025-05-16_vss-symposium/slides.html).
 
-This website contains two versions of the notebook we'll use today: [with](introduction.md) and [without](introduction-stripped.md) explanatory text. Today you'll run the version without explanatory text, which contains cells of code, while listening to my description. If later you wish to revisit this material, the version with explanatory text should help you.
+This website contains two versions of the notebook we'll use today: [with](full/introduction.md) and [without](users/introduction-stripped.md) explanatory text. Today you'll run the version without explanatory text, which contains cells of code, while listening to my description. If later you wish to revisit this material, the version with explanatory text should help you.
 
 You may also find the [glossary](glossary.md) useful as you go through the notebook.
 
@@ -207,6 +207,41 @@ If you have `ffmpeg` installed and are still having issues, try running `conda u
 
 :::
 
+## Troubleshooting
+
+- If you are on Mac and get an error related to `ruamel.yaml` (or `clang`) when running `pip install -r requirements.txt`, we think this can be fixed by updating your Xcode Command Line Tools.
+- On Windows, you may receive an error saying "running scripts is disabled on this system" when trying to activate the virtual environment. If so, run `Set-ExecutionPolicy -Scope CurrentUser` and enter `Unrestricted`, then press `Y`. (You may have to do this every time you open powershell.)
+- If you have multiple jupyter installs on your path (because e.g., because you have an existing jupyter installation in a conda environment and you then used `uv` to setup the virtual environment for this workshop), jupyter can get confused. (You can check if this is the case by running `which -a jupyter` on Mac / Linux.)
+  To avoid this problem, either make sure you only have one virtual environment active (e.g., by running `conda deactivate`) or prepend `JUPYTER_DATA_DIR=$(realpath ..)/.venv/share/jupyter/` to your jupyter command above:
+
+  ```shell
+  JUPYTER_DATA_DIR=$(realpath ..)/.venv/share/jupyter/ jupyter lab
+  ```
+
+  (On Windows, replace `$(realpath ..)` with the path to the `ccn-software-jan-2025` directory.)
+- We have noticed jupyter notebooks behaving a bit odd in Safari --- if you are running/editing jupyter in Safari and the behavior seems off (scrolling not smooth, lag between creation and display of cells), try a different browser. We've had better luck with Firefox or using the arrow keys to navigate between cells.
+- On **Windows + conda**: if after installing conda the paths are not correctly set, you may encounter this error message: 
+   ```
+   conda : The term 'conda' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+   ```
+  In this case, you can try the following steps:
+  - Locate the path to the `condabin` folder. The path should look like: `some-folder-path\Miniforge3\condabin`. 
+  
+    The following powershell command could be useful (note that i am starting form C: as a root, but you can change that): 
+    ```
+    Get-ChildItem -Path C:\ -Directory -Recurse -Filter "condabin" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+    ```
+  - Temporarily add conda to the paths: 
+    ```
+    $env:Path += ";some-folder-path\Miniforge3\condabin"
+    ```
+  - Initialize conda:
+    ```
+    conda init powershell 
+    ```
+  - Restart the powershell and check that conda is in the path. Run for example `conda --version`.
+- If you see `sys:1: DeprecationWarning: Call to deprecated function (or staticmethod) _destroy.` when running `python scripts/setup.py`, we don't think this is actually a problem. As long as `check_setup.py` says everything looks good, you're fine!
+
 ## Binder
 
 A binder instance (a virtual environment running on Flatiron's cluster) is provided in case we cannot get your installation working. To access it, click the "launch binder" button in the top left of this site or click [here](https://binder.flatironinstitute.org/v2/user/wbroderick/vss2025?labpath=notebooks).
@@ -217,7 +252,7 @@ You must login with the email address you provided when registering for the work
 - If you lose connection halfway through the workshop, go to the [binderhub page](https://binder.flatironinstitute.org/hub/hub/home) to join your running instance rather than restarting the image.
 - This is important because if you restart the image, **you will lose all data and progress**.
 - The binder will be shutdown automatically after 1 day of inactivity or 7 days of total usage. Data will not persist after the binder instance shuts down, so **please download any notebooks** you want to keep.
-- I will destroy this instance in 1 weeks, so that you can use it to play around during the conference. You can download your notebooks to keep them after the fact.
+- I will destroy this instance in 1 week, so that you can use it to play around during the conference. You can download your notebooks to keep them after the fact.
 
 ## Contents
 
@@ -225,7 +260,27 @@ See description above for an explanation of the difference between these two
 notebooks.
 
 ```{toctree}
+can_you_read.md
 glossary.md
-introduction.md
-introduction-stripped.md
+```
+
+```{toctree}
+:glob:
+:caption: Full notebooks
+:titlesonly:
+full/*
+```
+
+```{toctree}
+:glob:
+:caption: For users (some code, some text)
+:titlesonly:
+users/*
+```
+
+```{toctree}
+:glob:
+:caption: For presenter reference (all code, no text)
+:titlesonly:
+presenters/*
 ```
