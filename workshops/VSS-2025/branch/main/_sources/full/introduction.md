@@ -34,6 +34,7 @@ As described in my presentation, the goal of plenoptic is to provide methods for
 In order to use plenoptic, we need some models! Normally, this will depend on your research problem: you'll use models that you've developed or fit in previous experiments, or that get used in the literature. For example, if you're studying V1, you could use an energy model of complex cells; if you're studying object recognition, you might use a deep network-based model.
 
 <div class='render-all'>
+
 <img src="../_static/models.png">
 
 For the purposes of this notebook, we'll use some very simple convolutional models that are inspired by the processing done in the lateral geniculate nucleus (LGN) of the visual system[^models]. We're going to build up in complexity, starting with the Gaussian model at the top and gradually adding features[^notallmodels]. We'll describe the components of these models in more detail as we get to them, but briefly:
@@ -45,6 +46,7 @@ For the purposes of this notebook, we'll use some very simple convolutional mode
 - `Gaussian`: the model just convolves a Gaussian with an image, so that the model's representation is simply a blurry version of the image.
 - `CenterSurround`: the model convolves a difference-of-Gaussian filter with the image, so that model's representation is bandpass, caring mainly about frequencies that are neither too high or too low.
 - `LuminanceGainControl`: the model rectifies and normalizes the linear component of the response using a local measure of luminance, so that the response is invariant to local changes in luminance.
+
 </div>
 
 ## Plenoptic basics
@@ -52,6 +54,8 @@ For the purposes of this notebook, we'll use some very simple convolutional mode
 Let's get started! First, we'll import packages and set some configuration options:
 
 ```{code-cell} ipython3
+:tags: [render-all]
+
 import plenoptic as po
 import torch
 import pyrtools as pt
@@ -72,9 +76,45 @@ else:
     print("Running on CPU!")
 # for reprodicibility
 po.tools.set_seed(1)
+
+def plot_helper(metamer, init_img=None):
+    if init_img is None:
+        init_img = metamer.saved_metamer[0]
+    if metamer.image.shape[0] > 1:
+        img = metamer.image[:1]
+    else:
+        img = metamer.image
+    to_plot = [torch.cat([torch.ones_like(img),
+                          img,
+                          metamer.model(img)])]
+    for i, j in zip(init_img, metamer.metamer):
+        to_plot.append(torch.stack([i, j, metamer.model(j)]))
+    to_plot = torch.cat(to_plot)
+    fig = po.imshow(to_plot, col_wrap=3,
+                    title=['', 'Original image', 'Model representation\nof original image']+
+                           3*['Initial image', 'Synthesized metamer', 'Model representation\nof synthesized metamer']);
+    # change the color scale of the images so that the first two columns go from 0 to 1
+    # and the last one is consistent
+    for ax in fig.axes:
+        if 'representation' in ax.get_title():
+            clim = (to_plot[2::3].min(), to_plot[2::3].max())
+        else:
+            clim = (0, 1)
+        ax.images[0].set_clim(*clim)
+        title = ax.get_title().split('\n')
+        title[-2] = f" range: [{clim[0]:.01e}, {clim[1]:.01e}]"
+        ax.set_title('\n'.join(title))
+    return fig
+
 ```
 
 In addition to our models, all `plenoptic` methods require a "reference" or "target" image --- for Metamer synthesis, for example, this is the image whose representation we will match. Let's load in an image of Einstein to serve as our reference here:
+
+<div class='render-user render-presenter'>
+
+All synthesis methods require a "reference" or "target" image, so let's load one in.
+
+</div>
 
 ```{code-cell} ipython3
 img = po.data.einstein().to(DEVICE)
@@ -87,15 +127,19 @@ Models can be really simple, as this demonstrates. It needs to inherit `torch.nn
 
 To start, we'll create the `Gaussian` model described above:
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 Set up the Guassian model. Models in plenoptic must:
 - Inherit `torch.nn.Module`.
 - Accept tensors as input and return tensors as output.
 - Have `forward` and `__init__` methods.
 - Have all model parameter gradients removed.
+
 </div>
 
 ```{code-cell} ipython3
+:tags: [render-all]
+
 # this is a convenience function for creating a simple Gaussian kernel
 from plenoptic.simulate.canonical_computations.filters import circular_gaussian2d
 
@@ -106,28 +150,43 @@ class Gaussian(torch.nn.Module):
         super().__init__()
         self.kernel_size = kernel_size
         self.conv = torch.nn.Conv2d(1, 1, kernel_size=kernel_size, padding=(0, 0), bias=False)
-        self.conv.weight.data[0, 0] = circular_gaussian2d(kernel_size, float(std_dev))
+        self.conv.weight.data[0, 0] = circular_gaussian2d(kernel_size, std_dev)
         
     # the forward pass of the model defines how to get from an image to the representation
     def forward(self, x):
         x = po.tools.conv.same_padding(x, self.kernel_size, pad_mode='circular')
         return self.conv(x)
-
-# we pick this particular number to match the models found in the Berardino paper
-model = Gaussian((31, 31)).to(DEVICE)
-rep = model(img)
 ```
 
 To work with our synthesis methods, a model must accept a tensor as input and return a tensor as output. Generally speaking, plenoptic works with 4d inputs: these are commonly used to represent images when working with pytorch models, and the dimensions are batch (often, multiple images), channel (often, RGB or outputs of different convolutional filters), height, and width. This is not required for a model to work with plenoptic's synthesis methods, but several of the helper functions (especially those related to display) will not work if this is not the case.
 
 We can see that our `Gaussian` model satisfies this constraint:
 
+<div class="render-user render-all">
+
+- Initialize the Gaussian model.
+- Call it on our image.
+- View the dimensionality of the model inputs and outputs.
+
+</div>
+
 ```{code-cell} ipython3
+# we pick this particular size kernel to match the models found in the Berardino paper
+model = Gaussian((31, 31)).to(DEVICE)
+rep = model(img)
 print(img.shape)
 print(rep.shape)
 ```
 
 There's one final step before this model is ready for synthesis. Most `pytorch` models will have learnable parameters, such as the weight on the convolution filter we created above, because the focus is generally on training the model to best perform some task. In `plenoptic`, models are *fixed* because we take the opposite approach: generating some new stimulus to better a understand a given model. Thus, all synthesis methods will raise a `ValueError` if given a model with any learnable parameters. We provide a helper function to remove the gradients on these parameters. Similarly, we probably also want to call `.eval()` on the model, in case it has training-mode specific behavior: that's not the case here (I'm just being pedantic), but it might be the case, depending on your model, and [pytorch's documentation](https://pytorch.org/docs/stable/notes/autograd.html#evaluation-mode-nn-module-eval) recommends calling `.eval()` just in case.
+
+<div class="render-user render-presenter">
+
+In plenoptic (unlike most uses of pytorch), models are *fixed*, so we:
+- Remove gradients on model parameters.
+- Switch model to `eval` mode.
+
+</div>
 
 ```{code-cell} ipython3
 po.tools.remove_grad(model)
@@ -136,14 +195,16 @@ model.eval()
 
 The following shows the image and the model output. We can see that output is a blurred version of the input, as we would expect from a low-pass model.
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 - The Gaussian model output is a blurred version of the input.
 - This is because the model is preserving the low frequencies,  discarding the high frequencies (i.e., it's a lowpass filter).
 - Thus, this model is completely insensitive to high frequencies -- information there is invisible to the model.
+
 </div>
 
 ```{code-cell} ipython3
-fig = po.imshow(torch.cat([img, rep]), title=['Original image', 'Model output'])
+fig = po.imshow([img, rep], title=['Original image', 'Model output'])
 ```
 
 Before moving forward, let's think about this model for a moment. It's a simple Gaussian convolution which throws out high-frequency information, as we can see in the representation above. Metamers provide a tool for exploring a model's insensitivities, so any metamers we synthesize should capitalize on this: they should differ from the original image in the high frequencies.
@@ -153,9 +214,10 @@ Before moving forward, let's think about this model for a moment. It's a simple 
 
 Okay, now we're ready to start with metamer synthesis. To initialize, we only need the model and the image. Optimization-related arguments are set when calling `.synthesize()` and, in general, you'll probably need to play with these options to find a good solution. It's also probably a good idea, while getting started, to set `store_progress` to `True` (to store every iteration) or some `int` (to store every `int` iterations) so you can examine synthesis progress.
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 - Initialize the `Metamer` object and synthesize a model metamer.
-- View the synthesis process.
+
 </div>
 
 ```{code-cell} ipython3
@@ -167,6 +229,12 @@ matched_im = metamer.synthesize(store_progress=True, max_iter=150)
 ```
 
 After synthesis runs, we can examine the loss over time. There's a convenience function for this, but you could also call `plt.semilogy(metamer.losses)` to create it yourself.
+
+<div class="render-user render-presenter">
+
+- View the synthesis process.
+
+</div>
 
 ```{code-cell} ipython3
 po.synthesize.metamer.plot_loss(metamer);
@@ -191,6 +259,13 @@ po.synthesize.metamer.animate(metamer, included_plots=['display_metamer', 'plot_
 In the above, we see that we start with white noise, and gradually update the pixel values so as to make the model's representation of this image the same as that of our target Einstein image.
 
 We can then look at the reference and metamer images, as well as the model's outputs on the two images:
+
+<div class="render-user render-presenter">
+
+- Visualize model metamers.
+
+</div>
+
 
 ```{code-cell} ipython3
 fig = po.imshow([img, rep, metamer.metamer, model(metamer.metamer)], 
@@ -217,11 +292,15 @@ It may seem strange that the synthesized image looks like it has high-frequency 
 
 We can see the model's insensitivity to high frequencies more dramatically by initializing our metamer synthesis with a different image. By default, we initialize with a patch of white noise, but we can initialize with any image of the same size. Let's try with two different images, a sample of pink noise and a picture of Marie Curie.
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 - Synthesize more model metamers, from different starting points.
+
 </div>
 
 ```{code-cell} ipython3
+:tags: [render-all]
+
 curie = po.data.curie().to(DEVICE)
 # pyrtools, imported as pt, has a convenience function for generating samples of white noise, but then we still 
 # need to do some annoying things to get it ready for plenoptic
@@ -252,18 +331,26 @@ po.synthesize.metamer.plot_loss(metamer_curie)
 po.synthesize.metamer.plot_loss(metamer_pink);
 ```
 
-<div class='render-user'>
-In the following plot:
+<div class='render-user render-presenter'>
+
+Visualize all metamer outputs. In the plot we will create:
 - the first row shows our target Einstein image and its model representation, as we saw before.
 - the new three rows show our model metamers resulting from three different starting points.
 - in each, the first column shows the starting point of our metamer synthesis, the middle shows the resulting model metamer, and the third shows the model representation.
 
+</div>
+
+<div class='render-user render-presenter'>
+
 We can see that the model representation is the same for all four images, but the images themselves look very different. Because the model is completely invariant to high frequencies, the high frequencies present in the initial image are not affected by the synthesis procedure and thus are still present in the model metamer.
+
 </div>
 
 Good, now let's examine our synthesized metamer and the model output for all our initial images:
 
 ```{code-cell} ipython3
+:tags: [render-all]
+
 fig = po.imshow([torch.ones_like(img), img, rep,
                  metamer.saved_metamer[0], metamer.metamer, model(metamer.metamer),
                  pink, metamer_pink.metamer, model(metamer_pink.metamer),
@@ -272,7 +359,6 @@ fig = po.imshow([torch.ones_like(img), img, rep,
                 title=['', 'Original image', 'Model representation\nof original image']+
                       3*['Initial image', 'Synthesized metamer', 'Model representation\nof synthesized metamer']);
 ```
-
 We see that the new synthesized metamers looks quite different from both the original and from our previous metamer, while the model outputs of all the images look very similar. In the third row, the synthesized model metamer looks like a blurry picture of Einstein with a high-frequency "shadow" of Curie added on top. Again, this is because the Gaussian model is insensitive to high frequencies, and thus a model metamer can include any high frequency information. In the final row, we can see that our model metamer looks like a blurry picture of Einstein --- because pink noise has very little information in the high frequencies (and the information that is present is incoherent), our resulting metamer appears to have little information present.
 
 ## Examining model sensitivies to eigendistortions
@@ -281,10 +367,11 @@ By generating model metamers, we've gained a better understanding of the informa
 
 Like `Metamer`, `Eigendistortion` accepts an image and a model as its inputs. By default, it synthesizes the top and bottom eigendistortion, that is, the changes to the input image that the model finds most and least noticeable.
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 - While metamers allow us to examine model invariances, eigendistortions allow us to also examine model sensitivities.
 - Eigendistortions are distortions that the model thinks are the most and least noticeable.
-- They can be visualized on their own or on top of the reference image.
+
 </div>
 
 ```{code-cell} ipython3
@@ -310,9 +397,11 @@ po.imshow(img + 3*eig.eigendistortions, title=['Maximum eigendistortion',
 
 Now we feel pretty confident that we understand how a simple Gaussian works, what happens when we make the model more complicated? Let's try changing the filter from a simple lowpass to a bandpass filter, which have sensitivities more similar to those of neurons in the early human visual system. To do this, we'll use plenoptic's built-in `CenterSurround` object:
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 - The `CenterSurround` model has bandpass sensitivity, as opposed to the `Gaussian`'s lowpass.
 - Thus, it is still insensitive to the highest frequencies, but it is less sensitive to the low frequencies the Gaussian prefers, with its peak sensitivity lying in a middling range.
+
 </div>
 
 ```{code-cell} ipython3
@@ -334,8 +423,10 @@ While the Gaussian model above was lowpass, throwing away high frequencies and p
 
 We can make use of multi-batch processing in order to synthesize the metamers with different start points, as above, using a single `Metamer` object:
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 - We can synthesize all three model metamers at once by taking advantage of multi-batch processing.
+
 </div>
 
 ```{code-cell} ipython3
@@ -348,30 +439,16 @@ cs_metamer.setup(initial_image=init_img)
 cs_metamer.synthesize(1000, stop_criterion=1e-7)
 ```
 
-Now let's visualize our outputs (the code to create this plot is slightly annoying, so we're hiding it):
+Now let's visualize our outputs (the code to create this plot is slightly annoying, so we're defined it as a helper function at the top of the notebook):
+
+<div class="render-user render-presenter">
+
+- Visualize all the model metamers we synthesized.
+
+</div>
 
 ```{code-cell} ipython3
-:tags: [hide-input]
-
-# this requires a little reorganization of the tensors:
-to_plot = [torch.cat([torch.ones_like(img), img, center_surround(img)])]
-for i, j in zip(init_img, cs_metamer.metamer):
-    to_plot.append(torch.stack([i, j, center_surround(j)]))
-to_plot = torch.cat(to_plot)
-fig = po.imshow(to_plot, col_wrap=3, 
-                title=['', 'Original image', 'Model representation\nof original image']+
-                       3*['Initial image', 'Synthesized metamer', 'Model representation\nof synthesized metamer']);
-# change the color scale of the images so that the first two columns go from 0 to 1 
-# and the last one is consistent
-for ax in fig.axes:
-    if 'representation' in ax.get_title():
-        clim = (to_plot[2::3].min(), to_plot[2::3].max())
-    else:
-        clim = (0, 1)
-    ax.images[0].set_clim(*clim)
-    title = ax.get_title().split('\n')
-    title[-2] = f" range: [{clim[0]:.01e}, {clim[1]:.01e}]" 
-    ax.set_title('\n'.join(title))
+plot_helper(cs_metamer, init_img)
 ```
 
 The layout of the plots here is the same as before: the top row shows our target image and its model representation, while the next rows each show a separate model metamer in the middle column, with their different initial points in the left column and their model representations on the right. We can see that the model representation in each row looks the same, while the middle columns look very different. 
@@ -394,8 +471,10 @@ In all of these, the differences are the result of the fact that our model now c
 
 The change from a lowpass to a bandpass model also changes the model's most sensitive frequencies, though we can't easily tell that using model metamers. We can, however, using eigendistortions!
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 - By examining the eigendistortions, we can see more clearly that the model's preferred frequency has shifted higher, while the minimal eigendistortion still looks fairly similar.
+
 </div>
 
 ```{code-cell} ipython3
@@ -421,18 +500,17 @@ So far, our models have all been linear. That means that they're easy to underst
     ```
 [^gaincontrol]: Gain control, or divisive normalization, is ubiquitous in the central nervous system and has been proposed as a [canonical neural computation](https://www.nature.com/articles/nrn3136) which allows the brain to maximize sensitivity to relevant stimuli in changing contexts.
 
-<div class='render-user'>
+<div class='render-user render-presenter'>
+
 - The `LuminanceGainControl` model adds a nonlinearity, gain control. This makes the model harder to reason than the first two models.
 - This model divides the output of the `CenterSurround` filter with an estimate of local luminance (the output of a larger Gaussian filter), which makes the model completely insensitive to absolute pixel values. It now cares about contrast, rather than luminance.
 - This is a computation that we think is present throughout much of the early visual system.
+
 </div>
 
 ```{code-cell} ipython3
-lg = po.simulate.LuminanceGainControl((31, 31), pad_mode="circular").to(DEVICE)
-params_dict = {'luminance_scalar': 14.95, 'luminance.std': 4.235, 
-               'center_surround.center_std': 1.962, 'center_surround.surround_std': 4.235,
-               'center_surround.amplitude_ratio': 1.25}
-lg.load_state_dict({k: torch.as_tensor([v]) for k, v in params_dict.items()})
+lg = po.simulate.LuminanceGainControl((31, 31), pad_mode="circular", 
+                                      pretrained=True, cache_filt=True).to(DEVICE)
 po.tools.remove_grad(lg)
 lg.eval()
 ```
@@ -443,7 +521,13 @@ This builds in additional invariances to the model, making it explicitly less se
 po.imshow([lg(img), lg(2*img)], vrange='auto1');
 ```
 
-Now let's go ahead and synthesize and visualize metamers for this model. This will look the same as before, except we're going to explicitly initialize the optimizer object. This allows us to set the learning rate to a value slightly lower than the default, which allows us to find a better solution here.
+Now let's go ahead and synthesize and visualize metamers for this model. This will look the same as before, except we're going to set the learning rate to a value slightly lower than the default, which allows us to find a better solution here.
+
+<div class='render-user render-presenter'>
+
+- Let's synthesize and visualize some metamers for this model.
+
+</div>
 
 ```{code-cell} ipython3
 lg_metamer = po.synthesize.Metamer(img.repeat(3, 1, 1, 1), lg)
@@ -453,37 +537,26 @@ lg_metamer.synthesize(3500, stop_criterion=1e-11)
 
 And let's visualize our results:
 
-<div class='render-user'>
+<div class='render-presenter'>
+
 - The model metamers here look fairly similar to those of the `CenterSurround` model, though you can see these are more "gray", because this model is even less sensitive to the local luminance than the previous model.
+
 </div>
 
 ```{code-cell} ipython3
-:tags: [hide-input]
-
-# this requires a little reorganization of the tensors:
-to_plot = [torch.cat([torch.ones_like(img), img, center_surround(img)])]
-for i, j in zip(init_img, lg_metamer.metamer):
-    to_plot.append(torch.stack([i, j, center_surround(j)]))
-to_plot = torch.cat(to_plot)
-fig = po.imshow(to_plot, col_wrap=3, 
-                title=['', 'Original image', 'Model representation\nof original image']+
-                       3*['Initial image', 'Synthesized metamer', 'Model representation\nof synthesized metamer']);
-# change the color scale of the images so that the first two columns go from 0 to 1 
-# and the last one is consistent
-for ax in fig.axes:
-    if 'representation' in ax.get_title():
-        clim = (to_plot[2::3].min(), to_plot[2::3].max())
-    else:
-        clim = (0, 1)
-    ax.images[0].set_clim(*clim)
-    title = ax.get_title().split('\n')
-    title[-2] = f" range: [{clim[0]:.01e}, {clim[1]:.01e}]" 
-    ax.set_title('\n'.join(title))
+plot_helper(lg_metamer, init_img)
 ```
 
-We can see that the `LuminanceGainControl` model metamers look somewhat similar to that of the `CenterSurround` model, but taking the insensitivity to pixel values to an extreme --- because of the division by the local luminance, the model is completely invariant to it, so that the mean pixel values match those of the initializing image, fairly drmaatically.
+We can see that the `LuminanceGainControl` model metamers look somewhat similar to that of the `CenterSurround` model, but taking the insensitivity to pixel values to an extreme --- because of the division by the local luminance, the model is completely invariant to it, so that the mean pixel values match those of the initializing image, fairly dramatically.
 
 Finally, let's look at our eigendistortions:
+
+<div class='render-user render-presenter'>
+
+- Now let's use eigendistortions to see what this model is particularly sensitive to.
+
+</div>
+
 
 ```{code-cell} ipython3
 lg_eig = po.synthesize.Eigendistortion(img, lg)
@@ -508,8 +581,10 @@ Again, the minimum eigendistortion looks fairly similar to before, but now our m
 
 This adaptivity matters not just within images, but across images: the `CenterSurround` and `Gaussian` models' eigendistortions look the same on different images, whereas `LuminanceGainControl`'s eigendistortions vary depending on the image content:
 
-<div class='render-user'>
+<div class='render-presenter'>
+
 - Gain control makes this model adaptive, and thus the location of the eigendistortion matters, which was not true of our previous, linear models.
+
 </div>
 
 ```{code-cell} ipython3
@@ -526,6 +601,7 @@ po.imshow(cs_eig.eigendistortions, title=['CenterSurround Maximum \neigendistort
 ```
 
 We've plotted the `CenterSurround` eigendistortions for comparison and we can see that, while they're not identical, they look essentially the same, regardless of the image: bandpass unoriented noisy patterns for the maximum distortion and the same pattern at a higher frequency for the minimum. The `LuminanceGainControl` eigendistortions, by comparison, vary based on the image. They are, however, consistent with each other: in both cases, the `LuminanceGainControl` maximum distortion is placed in a dark patch of the image, as can be seen more explicitly when we add them (we're multiplying the eigendistortions by 3 to make them more obvious):
+
 
 ```{code-cell} ipython3
 # the [:1] is a trick to get only the first element while still being a 4d

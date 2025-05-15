@@ -392,6 +392,10 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plenoptic-basics">Plenoptic basics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examining-model-invariances-with-metamers">Examining model invariances with metamers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examining-model-sensitivies-to-eigendistortions">Examining model sensitivies to eigendistortions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-more-complex-model">A more complex model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-some-nonlinear-features-to-the-mix">Adding some nonlinear features to the mix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
 </ul>
             </nav>
@@ -419,7 +423,7 @@ rendered of this notebook, go <a class="reference internal" href="#../../full/in
 </ul>
 <section id="plenoptic-basics">
 <h2>Plenoptic basics<a class="headerlink" href="#plenoptic-basics" title="Link to this heading">#</a></h2>
-<div class="cell docutils container">
+<div class="cell tag_render-all docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">plenoptic</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">po</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -441,10 +445,382 @@ rendered of this notebook, go <a class="reference internal" href="#../../full/in
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running on CPU!&quot;</span><span class="p">)</span>
 <span class="c1"># for reprodicibility</span>
 <span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">set_seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_helper</span><span class="p">(</span><span class="n">metamer</span><span class="p">,</span> <span class="n">init_img</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">init_img</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">init_img</span> <span class="o">=</span> <span class="n">metamer</span><span class="o">.</span><span class="n">saved_metamer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">metamer</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">metamer</span><span class="o">.</span><span class="n">image</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">metamer</span><span class="o">.</span><span class="n">image</span>
+    <span class="n">to_plot</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">img</span><span class="p">),</span>
+                          <span class="n">img</span><span class="p">,</span>
+                          <span class="n">metamer</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">img</span><span class="p">)])]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">init_img</span><span class="p">,</span> <span class="n">metamer</span><span class="o">.</span><span class="n">metamer</span><span class="p">):</span>
+        <span class="n">to_plot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">metamer</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">j</span><span class="p">)]))</span>
+    <span class="n">to_plot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">to_plot</span><span class="p">)</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">to_plot</span><span class="p">,</span> <span class="n">col_wrap</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                    <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;Original image&#39;</span><span class="p">,</span> <span class="s1">&#39;Model representation</span><span class="se">\n</span><span class="s1">of original image&#39;</span><span class="p">]</span><span class="o">+</span>
+                           <span class="mi">3</span><span class="o">*</span><span class="p">[</span><span class="s1">&#39;Initial image&#39;</span><span class="p">,</span> <span class="s1">&#39;Synthesized metamer&#39;</span><span class="p">,</span> <span class="s1">&#39;Model representation</span><span class="se">\n</span><span class="s1">of synthesized metamer&#39;</span><span class="p">]);</span>
+    <span class="c1"># change the color scale of the images so that the first two columns go from 0 to 1</span>
+    <span class="c1"># and the last one is consistent</span>
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;representation&#39;</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_title</span><span class="p">():</span>
+            <span class="n">clim</span> <span class="o">=</span> <span class="p">(</span><span class="n">to_plot</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">to_plot</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="o">*</span><span class="n">clim</span><span class="p">)</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_title</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">title</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; range: [</span><span class="si">{</span><span class="n">clim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.01e</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">clim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.01e</span><span class="si">}</span><span class="s2">]&quot;</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">title</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">fig</span>
 </pre></div>
 </div>
 </div>
 </div>
+<p>All synthesis methods require a “reference” or “target” image, so let’s load one in.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">img</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">einstein</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Set up the Guassian model. Models in plenoptic must:</p>
+<ul class="simple">
+<li><p>Inherit <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>.</p></li>
+<li><p>Accept tensors as input and return tensors as output.</p></li>
+<li><p>Have <code class="docutils literal notranslate"><span class="pre">forward</span></code> and <code class="docutils literal notranslate"><span class="pre">__init__</span></code> methods.</p></li>
+<li><p>Have all model parameter gradients removed.</p></li>
+</ul>
+<div class="cell tag_render-all docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># this is a convenience function for creating a simple Gaussian kernel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plenoptic.simulate.canonical_computations.filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">circular_gaussian2d</span>
+
+<span class="c1"># Simple Gaussian convolutional model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Gaussian</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="c1"># in __init__, we create the object, initializing the convolutional weights and nonlinearity</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">std_dev</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">circular_gaussian2d</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">std_dev</span><span class="p">)</span>
+        
+    <span class="c1"># the forward pass of the model defines how to get from an image to the representation</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">same_padding</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;circular&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Initialize the Gaussian model.</p></li>
+<li><p>Call it on our image.</p></li>
+<li><p>View the dimensionality of the model inputs and outputs.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># we pick this particular size kernel to match the models found in the Berardino paper</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Gaussian</span><span class="p">((</span><span class="mi">31</span><span class="p">,</span> <span class="mi">31</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">rep</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rep</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>In plenoptic (unlike most uses of pytorch), models are <em>fixed</em>, so we:</p>
+<ul class="simple">
+<li><p>Remove gradients on model parameters.</p></li>
+<li><p>Switch model to <code class="docutils literal notranslate"><span class="pre">eval</span></code> mode.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">remove_grad</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>The Gaussian model output is a blurred version of the input.</p></li>
+<li><p>This is because the model is preserving the low frequencies,  discarding the high frequencies (i.e., it’s a lowpass filter).</p></li>
+<li><p>Thus, this model is completely insensitive to high frequencies – information there is invisible to the model.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">([</span><span class="n">img</span><span class="p">,</span> <span class="n">rep</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Original image&#39;</span><span class="p">,</span> <span class="s1">&#39;Model output&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="examining-model-invariances-with-metamers">
+<h2>Examining model invariances with metamers<a class="headerlink" href="#examining-model-invariances-with-metamers" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Initialize the <code class="docutils literal notranslate"><span class="pre">Metamer</span></code> object and synthesize a model metamer.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">metamer</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Metamer</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+
+<span class="n">matched_im</span> <span class="o">=</span> <span class="n">metamer</span><span class="o">.</span><span class="n">synthesize</span><span class="p">(</span><span class="n">store_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="c1"># if we call synthesize again, we resume where we left off</span>
+<span class="n">matched_im</span> <span class="o">=</span> <span class="n">metamer</span><span class="o">.</span><span class="n">synthesize</span><span class="p">(</span><span class="n">store_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>View the synthesis process.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">metamer</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">(</span><span class="n">metamer</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">metamer</span><span class="o">.</span><span class="n">animate</span><span class="p">(</span><span class="n">metamer</span><span class="p">,</span> <span class="n">included_plots</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;display_metamer&#39;</span><span class="p">,</span> <span class="s1">&#39;plot_loss&#39;</span><span class="p">],</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Visualize model metamers.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">([</span><span class="n">img</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span> <span class="n">metamer</span><span class="o">.</span><span class="n">metamer</span><span class="p">,</span> <span class="n">model</span><span class="p">(</span><span class="n">metamer</span><span class="o">.</span><span class="n">metamer</span><span class="p">)],</span> 
+                <span class="n">col_wrap</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">vrange</span><span class="o">=</span><span class="s1">&#39;auto1&#39;</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Original image&#39;</span><span class="p">,</span> <span class="s1">&#39;Model representation</span><span class="se">\n</span><span class="s1">of original image&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;Synthesized metamer&#39;</span><span class="p">,</span> <span class="s1">&#39;Model representation</span><span class="se">\n</span><span class="s1">of synthesized metamer&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Synthesize more model metamers, from different starting points.</p></li>
+</ul>
+<div class="cell tag_render-all docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">curie</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">curie</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="c1"># pyrtools, imported as pt, has a convenience function for generating samples of white noise, but then we still </span>
+<span class="c1"># need to do some annoying things to get it ready for plenoptic</span>
+<span class="n">pink</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">synthetic_images</span><span class="o">.</span><span class="n">pink_noise</span><span class="p">((</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pink</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">pink</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">([</span><span class="n">curie</span><span class="p">,</span> <span class="n">pink</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">metamer_curie</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Metamer</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+<span class="n">metamer_curie</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">initial_image</span><span class="o">=</span><span class="n">curie</span><span class="p">)</span>
+<span class="n">metamer_pink</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Metamer</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span> 
+<span class="n">metamer_pink</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">initial_image</span><span class="o">=</span><span class="n">pink</span><span class="p">)</span>
+
+<span class="c1"># we increase the length of time we run synthesis and decrease the</span>
+<span class="c1"># stop_criterion, which determines when we think loss has converged</span>
+<span class="c1"># for stopping synthesis early.</span>
+<span class="n">metamer_curie</span><span class="o">.</span><span class="n">synthesize</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>  <span class="n">stop_criterion</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
+<span class="n">metamer_pink</span><span class="o">.</span><span class="n">synthesize</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>  <span class="n">stop_criterion</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">metamer</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">(</span><span class="n">metamer_curie</span><span class="p">)</span>
+<span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">metamer</span><span class="o">.</span><span class="n">plot_loss</span><span class="p">(</span><span class="n">metamer_pink</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Visualize all metamer outputs. In the plot we will create:</p>
+<ul class="simple">
+<li><p>the first row shows our target Einstein image and its model representation, as we saw before.</p></li>
+<li><p>the new three rows show our model metamers resulting from three different starting points.</p></li>
+<li><p>in each, the first column shows the starting point of our metamer synthesis, the middle shows the resulting model metamer, and the third shows the model representation.</p></li>
+</ul>
+<p>We can see that the model representation is the same for all four images, but the images themselves look very different. Because the model is completely invariant to high frequencies, the high frequencies present in the initial image are not affected by the synthesis procedure and thus are still present in the model metamer.</p>
+<div class="cell tag_render-all docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">img</span><span class="p">,</span> <span class="n">rep</span><span class="p">,</span>
+                 <span class="n">metamer</span><span class="o">.</span><span class="n">saved_metamer</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">metamer</span><span class="o">.</span><span class="n">metamer</span><span class="p">,</span> <span class="n">model</span><span class="p">(</span><span class="n">metamer</span><span class="o">.</span><span class="n">metamer</span><span class="p">),</span>
+                 <span class="n">pink</span><span class="p">,</span> <span class="n">metamer_pink</span><span class="o">.</span><span class="n">metamer</span><span class="p">,</span> <span class="n">model</span><span class="p">(</span><span class="n">metamer_pink</span><span class="o">.</span><span class="n">metamer</span><span class="p">),</span>
+                 <span class="n">curie</span><span class="p">,</span> <span class="n">metamer_curie</span><span class="o">.</span><span class="n">metamer</span><span class="p">,</span> <span class="n">model</span><span class="p">(</span><span class="n">metamer_curie</span><span class="o">.</span><span class="n">metamer</span><span class="p">)],</span>
+                <span class="n">col_wrap</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">vrange</span><span class="o">=</span><span class="s1">&#39;auto1&#39;</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;Original image&#39;</span><span class="p">,</span> <span class="s1">&#39;Model representation</span><span class="se">\n</span><span class="s1">of original image&#39;</span><span class="p">]</span><span class="o">+</span>
+                      <span class="mi">3</span><span class="o">*</span><span class="p">[</span><span class="s1">&#39;Initial image&#39;</span><span class="p">,</span> <span class="s1">&#39;Synthesized metamer&#39;</span><span class="p">,</span> <span class="s1">&#39;Model representation</span><span class="se">\n</span><span class="s1">of synthesized metamer&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="examining-model-sensitivies-to-eigendistortions">
+<h2>Examining model sensitivies to eigendistortions<a class="headerlink" href="#examining-model-sensitivies-to-eigendistortions" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>While metamers allow us to examine model invariances, eigendistortions allow us to also examine model sensitivities.</p></li>
+<li><p>Eigendistortions are distortions that the model thinks are the most and least noticeable.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">eig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Eigendistortion</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+<span class="n">eig</span><span class="o">.</span><span class="n">synthesize</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">eig</span><span class="o">.</span><span class="n">eigendistortions</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Maximum eigendistortion&#39;</span><span class="p">,</span> 
+                                       <span class="s1">&#39;Minimum eigendistortion&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">eig</span><span class="o">.</span><span class="n">eigendistortions</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Maximum eigendistortion&#39;</span><span class="p">,</span> 
+                                               <span class="s1">&#39;Minimum eigendistortion&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="a-more-complex-model">
+<h2>A more complex model<a class="headerlink" href="#a-more-complex-model" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">CenterSurround</span></code> model has bandpass sensitivity, as opposed to the <code class="docutils literal notranslate"><span class="pre">Gaussian</span></code>’s lowpass.</p></li>
+<li><p>Thus, it is still insensitive to the highest frequencies, but it is less sensitive to the low frequencies the Gaussian prefers, with its peak sensitivity lying in a middling range.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># These values come from Berardino et al., 2017.</span>
+<span class="n">center_surround</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">simulate</span><span class="o">.</span><span class="n">CenterSurround</span><span class="p">((</span><span class="mi">31</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span> <span class="n">center_std</span><span class="o">=</span><span class="mf">1.962</span><span class="p">,</span> <span class="n">surround_std</span><span class="o">=</span><span class="mf">4.235</span><span class="p">,</span>
+                                             <span class="n">pad_mode</span><span class="o">=</span><span class="s1">&#39;circular&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">remove_grad</span><span class="p">(</span><span class="n">center_surround</span><span class="p">)</span>
+<span class="n">center_surround</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">center_surround</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">([</span><span class="n">img</span><span class="p">,</span> <span class="n">center_surround</span><span class="p">(</span><span class="n">img</span><span class="p">)]);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>We can synthesize all three model metamers at once by taking advantage of multi-batch processing.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">white_noise</span> <span class="o">=</span>  <span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">rescale</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand_like</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">a</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">init_img</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">white_noise</span><span class="p">,</span> <span class="n">pink</span><span class="p">,</span> <span class="n">curie</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="c1"># metamer does a 1-to-1 matching between initial and target images,</span>
+<span class="c1"># so we need to repeat the target image on the batch dimension</span>
+<span class="n">cs_metamer</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Metamer</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">center_surround</span><span class="p">)</span>
+<span class="n">cs_metamer</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">initial_image</span><span class="o">=</span><span class="n">init_img</span><span class="p">)</span>
+<span class="n">cs_metamer</span><span class="o">.</span><span class="n">synthesize</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">stop_criterion</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Visualize all the model metamers we synthesized.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plot_helper</span><span class="p">(</span><span class="n">cs_metamer</span><span class="p">,</span> <span class="n">init_img</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>By examining the eigendistortions, we can see more clearly that the model’s preferred frequency has shifted higher, while the minimal eigendistortion still looks fairly similar.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cs_eig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Eigendistortion</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">center_surround</span><span class="p">)</span>
+<span class="n">cs_eig</span><span class="o">.</span><span class="n">synthesize</span><span class="p">();</span>
+<span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cs_eig</span><span class="o">.</span><span class="n">eigendistortions</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Maximum eigendistortion&#39;</span><span class="p">,</span> 
+                                          <span class="s1">&#39;Minimum eigendistortion&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="adding-some-nonlinear-features-to-the-mix">
+<h2>Adding some nonlinear features to the mix<a class="headerlink" href="#adding-some-nonlinear-features-to-the-mix" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">LuminanceGainControl</span></code> model adds a nonlinearity, gain control. This makes the model harder to reason than the first two models.</p></li>
+<li><p>This is a computation that we think is present throughout much of the early visual system.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lg</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">simulate</span><span class="o">.</span><span class="n">LuminanceGainControl</span><span class="p">((</span><span class="mi">31</span><span class="p">,</span> <span class="mi">31</span><span class="p">),</span> <span class="n">pad_mode</span><span class="o">=</span><span class="s2">&quot;circular&quot;</span><span class="p">,</span> 
+                                      <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache_filt</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">DEVICE</span><span class="p">)</span>
+<span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">remove_grad</span><span class="p">(</span><span class="n">lg</span><span class="p">)</span>
+<span class="n">lg</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">([</span><span class="n">lg</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">lg</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">img</span><span class="p">)],</span> <span class="n">vrange</span><span class="o">=</span><span class="s1">&#39;auto1&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Let’s synthesize and visualize some metamers for this model.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lg_metamer</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Metamer</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">lg</span><span class="p">)</span>
+<span class="n">lg_metamer</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">initial_image</span><span class="o">=</span><span class="n">init_img</span><span class="p">,</span> <span class="n">optimizer_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="mf">.007</span><span class="p">})</span>
+<span class="n">lg_metamer</span><span class="o">.</span><span class="n">synthesize</span><span class="p">(</span><span class="mi">3500</span><span class="p">,</span> <span class="n">stop_criterion</span><span class="o">=</span><span class="mf">1e-11</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>The model metamers here look fairly similar to those of the <code class="docutils literal notranslate"><span class="pre">CenterSurround</span></code> model, though you can see these are more “gray”, because this model is even less sensitive to the local luminance than the previous model.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plot_helper</span><span class="p">(</span><span class="n">lg_metamer</span><span class="p">,</span> <span class="n">init_img</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Now let’s use eigendistortions to see what this model is particularly sensitive to.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lg_eig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Eigendistortion</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lg</span><span class="p">)</span>
+<span class="n">lg_eig</span><span class="o">.</span><span class="n">synthesize</span><span class="p">();</span>
+<span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">lg_eig</span><span class="o">.</span><span class="n">eigendistortions</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Maximum eigendistortion&#39;</span><span class="p">,</span> 
+                                          <span class="s1">&#39;Minimum eigendistortion&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Gain control makes this model adaptive, and thus the location of the eigendistortion matters, which was not true of our previous, linear models.</p></li>
+</ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">lg_curie_eig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">synthesize</span><span class="o">.</span><span class="n">Eigendistortion</span><span class="p">(</span><span class="n">curie</span><span class="p">,</span> <span class="n">lg</span><span class="p">)</span>
@@ -544,6 +920,10 @@ rendered of this notebook, go <a class="reference internal" href="#../../full/in
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plenoptic-basics">Plenoptic basics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examining-model-invariances-with-metamers">Examining model invariances with metamers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examining-model-sensitivies-to-eigendistortions">Examining model sensitivies to eigendistortions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-more-complex-model">A more complex model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-some-nonlinear-features-to-the-mix">Adding some nonlinear features to the mix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
 </ul>
   </nav></div>

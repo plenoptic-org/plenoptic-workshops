@@ -4,11 +4,17 @@ This site hosts the example notebook used for the plenoptic satellite event at V
 
 The presentation I gave at the beginning of this session can be found [here](https://presentations.plenoptic.org/2025-05-16_vss-symposium/slides.html).
 
-This website contains two versions of the notebook we'll use today: [with](full/introduction.md) and [without](users/introduction-stripped.md) explanatory text. Today you'll run the version without explanatory text, which contains cells of code, while listening to my description. If later you wish to revisit this material, the version with explanatory text should help you.
+Before the satellite event, please try to follow the [setup](#setup) instructions below to install everything on your personal laptop.
+
+## This website
+
+This website contains rendered versions of the notebooks we will be working through during this workshop. During the workshop, attendees should look at the versions found under the `For users` section. These notebooks have some code pre-filled, as well as brief notes to help orient you. If you follow the setup instructions below, you will have editable copies of these notebooks on your laptop, and you are expected to follow along using these notebooks.
+
+If you miss something or fall behind, you can look into the `For presenters` section, which includes the completed code blocks (along with some notes), so you can catch up.
+
+After the workshop, we encourage you to return and check out the `Full notebooks` section, which, as the name implies, includes everything: explanatory text, code, and plots.
 
 You may also find the [glossary](glossary.md) useful as you go through the notebook.
-
-You can also [follow the setup instructions here](#setup) to download these notebooks and run them locally, but to avoid potential installation issues in this brief period of time, we'll use binder instead. Click on the `launch binder` badge on the upper left sidebar, which will then prompt you to login. Use the google account that you gave to the class organizers; if you get a 403 forbidden error or would like to use a different account, let me know so that I can give it permission. The binder instance provides a GPU with the environment necessary to run the notebook. See [the section below](#binder) for more details on the binder, including some important usage notes.
 
 ## Setup
 
