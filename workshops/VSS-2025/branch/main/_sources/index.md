@@ -266,8 +266,16 @@ See description above for an explanation of the difference between these two
 notebooks.
 
 ```{toctree}
+:titlesonly:
 can_you_read.md
 glossary.md
+```
+
+```{toctree}
+:glob:
+:caption: Exercises
+:titlesonly:
+exercises/*
 ```
 
 ```{toctree}
