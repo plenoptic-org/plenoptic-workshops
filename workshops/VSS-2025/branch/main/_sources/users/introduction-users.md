@@ -94,8 +94,9 @@ All synthesis methods require a "reference" or "target" image, so let's load one
 
 Set up the Guassian model. Models in plenoptic must:
 - Inherit `torch.nn.Module`.
-- Accept tensors as input and return tensors as output.
 - Have `forward` and `__init__` methods.
+- Accept tensors as input and return tensors as output.
+- All operations performed must be torch-differentiable (i.e., come from the torch library)
 - Have all model parameter gradients removed.
 ```{code-cell} ipython3
 :tags: [render-all]
@@ -128,14 +129,7 @@ class Gaussian(torch.nn.Module):
 
 
 
-In plenoptic (unlike most uses of pytorch), models are *fixed*, so we:
-- Remove gradients on model parameters.
-- Switch model to `eval` mode.
-```{code-cell}
-# enter code here
-```
-
-
+The following shows the image and the model output. We can see that output is a blurred version of the input, as we would expect from a low-pass model.
 
 - The Gaussian model output is a blurred version of the input.
 - This is because the model is preserving the low frequencies,  discarding the high frequencies (i.e., it's a lowpass filter).

@@ -98,8 +98,9 @@ fig = po.imshow(img)
 
 Set up the Guassian model. Models in plenoptic must:
 - Inherit `torch.nn.Module`.
-- Accept tensors as input and return tensors as output.
 - Have `forward` and `__init__` methods.
+- Accept tensors as input and return tensors as output.
+- All operations performed must be torch-differentiable (i.e., come from the torch library)
 - Have all model parameter gradients removed.
 
 
@@ -139,15 +140,8 @@ print(rep.shape)
 ```
 
 
-In plenoptic (unlike most uses of pytorch), models are *fixed*, so we:
-- Remove gradients on model parameters.
-- Switch model to `eval` mode.
+The following shows the image and the model output. We can see that output is a blurred version of the input, as we would expect from a low-pass model.
 
-
-```{code-cell} ipython3
-po.tools.remove_grad(model)
-model.eval()
-```
 
 
 - The Gaussian model output is a blurred version of the input.
@@ -157,6 +151,10 @@ model.eval()
 
 ```{code-cell} ipython3
 fig = po.imshow([img, rep], title=['Original image', 'Model output'])
+```
+```{code-cell} ipython3
+po.tools.remove_grad(model)
+model.eval()
 ```
 ## Examining model invariances with metamers
 

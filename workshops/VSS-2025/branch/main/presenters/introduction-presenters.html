@@ -495,8 +495,9 @@ rendered of this notebook, go <a class="reference internal" href="#../../full/in
 <p>Set up the Guassian model. Models in plenoptic must:</p>
 <ul class="simple">
 <li><p>Inherit <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>.</p></li>
-<li><p>Accept tensors as input and return tensors as output.</p></li>
 <li><p>Have <code class="docutils literal notranslate"><span class="pre">forward</span></code> and <code class="docutils literal notranslate"><span class="pre">__init__</span></code> methods.</p></li>
+<li><p>Accept tensors as input and return tensors as output.</p></li>
+<li><p>All operations performed must be torch-differentiable (i.e., come from the torch library)</p></li>
 <li><p>Have all model parameter gradients removed.</p></li>
 </ul>
 <div class="cell tag_render-all docutils container">
@@ -537,19 +538,7 @@ rendered of this notebook, go <a class="reference internal" href="#../../full/in
 </div>
 </div>
 </div>
-<p>In plenoptic (unlike most uses of pytorch), models are <em>fixed</em>, so we:</p>
-<ul class="simple">
-<li><p>Remove gradients on model parameters.</p></li>
-<li><p>Switch model to <code class="docutils literal notranslate"><span class="pre">eval</span></code> mode.</p></li>
-</ul>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">remove_grad</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
+<p>The following shows the image and the model output. We can see that output is a blurred version of the input, as we would expect from a low-pass model.</p>
 <ul class="simple">
 <li><p>The Gaussian model output is a blurred version of the input.</p></li>
 <li><p>This is because the model is preserving the low frequencies,  discarding the high frequencies (i.e., it’s a lowpass filter).</p></li>
@@ -558,6 +547,14 @@ rendered of this notebook, go <a class="reference internal" href="#../../full/in
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">po</span><span class="o">.</span><span class="n">imshow</span><span class="p">([</span><span class="n">img</span><span class="p">,</span> <span class="n">rep</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Original image&#39;</span><span class="p">,</span> <span class="s1">&#39;Model output&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">po</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">remove_grad</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>

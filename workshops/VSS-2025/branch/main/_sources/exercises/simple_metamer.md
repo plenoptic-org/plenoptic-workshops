@@ -79,13 +79,6 @@ Try one of the other [included images](https://docs.plenoptic.org/docs/branch/ma
 
 img = # WRITE SOMETHING NEW HERE
 img = img.to(DEVICE)
-model = po.simul.LuminanceGainControl(
-    kernel_size=(31, 31), pad_mode="circular",
-    pretrained=True, cache_filt=True
-)
-model.to(DEVICE)
-po.tools.remove_grad(model)
-model.eval()
 met = po.synth.Metamer(img, model)
 met.synthesize(max_iter=1300, stop_criterion=1e-11, store_progress=10)
 po.synth.metamer.plot_synthesis_status(met);
@@ -106,15 +99,6 @@ While we often initialize from a patch of white noise, it can be interesting to 
 ```{code-cell} ipython3
 :tags: [skip-execution]
 
-img = # WRITE SOMETHING NEW HERE
-img = img.to(DEVICE)
-model = po.simul.LuminanceGainControl(
-    kernel_size=(31, 31), pad_mode="circular",
-    pretrained=True, cache_filt=True
-)
-model.to(DEVICE)
-po.tools.remove_grad(model)
-model.eval()
 met = po.synth.Metamer(img, model)
 met.setup(initial_image=) # FINISH THE CALL TO setup
 met.synthesize(max_iter=1300, stop_criterion=1e-11, store_progress=10)

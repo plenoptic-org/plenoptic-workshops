@@ -131,8 +131,9 @@ To start, we'll create the `Gaussian` model described above:
 
 Set up the Guassian model. Models in plenoptic must:
 - Inherit `torch.nn.Module`.
-- Accept tensors as input and return tensors as output.
 - Have `forward` and `__init__` methods.
+- Accept tensors as input and return tensors as output.
+- All operations performed must be torch-differentiable (i.e., come from the torch library)
 - Have all model parameter gradients removed.
 
 </div>
@@ -182,17 +183,6 @@ There's one final step before this model is ready for synthesis. Most `pytorch` 
 
 <div class="render-user render-presenter">
 
-In plenoptic (unlike most uses of pytorch), models are *fixed*, so we:
-- Remove gradients on model parameters.
-- Switch model to `eval` mode.
-
-</div>
-
-```{code-cell} ipython3
-po.tools.remove_grad(model)
-model.eval()
-```
-
 The following shows the image and the model output. We can see that output is a blurred version of the input, as we would expect from a low-pass model.
 
 <div class='render-user render-presenter'>
@@ -205,6 +195,17 @@ The following shows the image and the model output. We can see that output is a 
 
 ```{code-cell} ipython3
 fig = po.imshow([img, rep], title=['Original image', 'Model output'])
+```
+
+In plenoptic (unlike most uses of pytorch), models are *fixed*, so we:
+- Remove gradients on model parameters.
+- Switch model to `eval` mode.
+
+</div>
+
+```{code-cell} ipython3
+po.tools.remove_grad(model)
+model.eval()
 ```
 
 Before moving forward, let's think about this model for a moment. It's a simple Gaussian convolution which throws out high-frequency information, as we can see in the representation above. Metamers provide a tool for exploring a model's insensitivities, so any metamers we synthesize should capitalize on this: they should differ from the original image in the high frequencies.
