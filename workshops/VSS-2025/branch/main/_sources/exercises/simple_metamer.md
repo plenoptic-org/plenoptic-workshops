@@ -6,9 +6,9 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.17.1
 kernelspec:
-  display_name: Python 3 (ipykernel)
+  name: vss2025
+  display_name: vss2025
   language: python
-  name: python3
 ---
 
 # Minimal metamer synthesis example
@@ -19,8 +19,8 @@ See [plenoptic docs](https://docs.plenoptic.org/) for more details.
 import plenoptic as po
 import torch
 # needed for the plotting/animating:
-%matplotlib inline
 import matplotlib.pyplot as plt
+%matplotlib inline
 plt.rcParams['animation.html'] = 'html5'
 # use single-threaded ffmpeg for animation writer
 plt.rcParams['animation.writer'] = 'ffmpeg'
@@ -50,7 +50,11 @@ Next, we need to ensure that the metamer synthesis succeeded. In the previous ex
 There are many possible visualizations one can make. We have a helper function that should help get you started. It shows the metamer, the synthesis loss over time, and (if possible) the representation error.
 
 ```{code-cell} ipython3
-po.synth.metamer.plot_synthesis_status(met);
+fig, _ = po.synth.metamer.plot_synthesis_status(met)
+```
+
+```{code-cell} ipython3
+fig
 ```
 
 In the above figure, we can see that the loss has decreased to a low value and, importantly, that it looks like it has stabilized.

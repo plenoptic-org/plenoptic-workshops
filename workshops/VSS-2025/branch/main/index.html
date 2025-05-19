@@ -191,7 +191,7 @@
           
           
           
-          <a href="https://binder.flatironinstitute.org/v2/user/wbroderick/vss2025?filepath=introduction-stripped.ipynb" title="Binder" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://mybinder.org/badge_logo.svg" class="icon-link-image" alt="Binder"/></a>
+          <a href="https://binder.flatironinstitute.org/v2/user/wbroderick/vss2025?labpath=notebooks/introduction-users.ipynb" title="Binder" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://mybinder.org/badge_logo.svg" class="icon-link-image" alt="Binder"/></a>
         </li>
 </ul></div>
         <div class="sidebar-primary-item">
@@ -221,8 +221,10 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Exercises</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="exercises/simple_eigendistortion.html">Minimal eigendistortion synthesis example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exercises/simple_metamer.html">Minimal metamer synthesis example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exercises/textures.html">Texture synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exercises/torchvision.html">Synthesizing model metamers for TorchVision / TIMM models</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Full notebooks</span></p>
 <ul class="nav bd-sidenav">
@@ -543,17 +545,61 @@ conda / miniforge</label><div class="sd-tab-content docutils">
 <section id="install-dependencies-and-setup-notebooks">
 <h4>Install dependencies and setup notebooks<a class="headerlink" href="#install-dependencies-and-setup-notebooks" title="Link to this heading">#</a></h4>
 <ol class="arabic">
-<li><p>Install the required dependencies. This will install pynapple and nemos, as well as jupyter and several other packages.</p>
+<li><p>Install pytorch. <strong>Note</strong> the way you do this will depend on whether you have a GPU or not. Getting pytorch working properly on a GPU can be a bit of a challenge, so if you try to install it to use with your GPU and it fails, try the CPU version.</p>
 <div class="sd-tab-set docutils">
 <input checked="checked" id="sd-tab-item-4" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" data-sync-group="category" data-sync-id="uv" for="sd-tab-item-4">
+<label class="sd-tab-label" for="sd-tab-item-4">
+cpu</label><div class="sd-tab-content docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="category" data-sync-id="uv" for="sd-tab-item-6">
+uv</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>torch<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-7" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" data-sync-group="category" data-sync-id="conda" for="sd-tab-item-7">
+conda</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch<span class="w">  </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+gpu</label><div class="sd-tab-content docutils">
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="category" data-sync-id="uv" for="sd-tab-item-8">
+uv</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>torch
+</pre></div>
+</div>
+</div>
+<input id="sd-tab-item-9" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" data-sync-group="category" data-sync-id="conda" for="sd-tab-item-9">
+conda</label><div class="sd-tab-content docutils">
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</li>
+<li><p>Install the rest of the dependencies. This will install plenoptic, as well as jupyter and several other packages.</p>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-10" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="category" data-sync-id="uv" for="sd-tab-item-10">
 uv</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </pre></div>
 </div>
 </div>
-<input id="sd-tab-item-5" name="sd-tab-set-2" type="radio">
-<label class="sd-tab-label" data-sync-group="category" data-sync-id="conda" for="sd-tab-item-5">
+<input id="sd-tab-item-11" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" data-sync-group="category" data-sync-id="conda" for="sd-tab-item-11">
 conda</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </pre></div>
@@ -576,12 +622,12 @@ conda</label><div class="sd-tab-content docutils">
 <p>After doing the above, the <code class="docutils literal notranslate"><span class="pre">notebooks/</span></code> directories within your local copy of the <code class="docutils literal notranslate"><span class="pre">plenoptic-vss-2025</span></code> repository will contain the jupyter notebooks for the event.</p>
 <p>During the event, we will run through the notebooks in the order they’re listed on this website. To open them, navigate to the <code class="docutils literal notranslate"><span class="pre">notebooks/</span></code> directory, activate your virtual environment and start <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">lab</span></code>:</p>
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" data-sync-group="category" data-sync-id="uv" for="sd-tab-item-6">
+<input checked="checked" id="sd-tab-item-12" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="category" data-sync-id="uv" for="sd-tab-item-12">
 uv</label><div class="sd-tab-content docutils">
 <div class="sd-tab-set docutils">
-<input checked="checked" id="sd-tab-item-8" name="sd-tab-set-4" type="radio">
-<label class="sd-tab-label" data-sync-group="os" data-sync-id="posix" for="sd-tab-item-8">
+<input checked="checked" id="sd-tab-item-14" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="os" data-sync-id="posix" for="sd-tab-item-14">
 Mac/Linux</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>path/to/plenoptic-vss-2025/notebooks
 <span class="nb">source</span><span class="w"> </span>../.venv/bin/activate
@@ -589,8 +635,8 @@ jupyter<span class="w"> </span>lab
 </pre></div>
 </div>
 </div>
-<input id="sd-tab-item-9" name="sd-tab-set-4" type="radio">
-<label class="sd-tab-label" data-sync-group="os" data-sync-id="windows" for="sd-tab-item-9">
+<input id="sd-tab-item-15" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" data-sync-group="os" data-sync-id="windows" for="sd-tab-item-15">
 Windows</label><div class="sd-tab-content docutils">
 <div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd </span><span class="n">path</span><span class="p">\</span><span class="n">to</span><span class="p">\</span><span class="n">plenoptic-vss</span><span class="p">-</span><span class="n">2025</span><span class="p">\</span><span class="n">notebooks</span>
 <span class="p">..\.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">activate</span>
@@ -600,8 +646,8 @@ Windows</label><div class="sd-tab-content docutils">
 </div>
 </div>
 </div>
-<input id="sd-tab-item-7" name="sd-tab-set-3" type="radio">
-<label class="sd-tab-label" data-sync-group="category" data-sync-id="conda" for="sd-tab-item-7">
+<input id="sd-tab-item-13" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" data-sync-group="category" data-sync-id="conda" for="sd-tab-item-13">
 conda / miniforge</label><div class="sd-tab-content docutils">
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>path/to/plenoptic-vss-2025/notebooks
 conda<span class="w"> </span>activate<span class="w"> </span>plenoptic-vss25
@@ -684,8 +730,10 @@ notebooks.</p>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Exercises</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="exercises/simple_eigendistortion.html">Minimal eigendistortion synthesis example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exercises/simple_metamer.html">Minimal metamer synthesis example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exercises/textures.html">Texture synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exercises/torchvision.html">Synthesizing model metamers for TorchVision / TIMM models</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">

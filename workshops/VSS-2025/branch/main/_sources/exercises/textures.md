@@ -6,9 +6,9 @@ jupytext:
     format_version: 0.13
     jupytext_version: 1.17.1
 kernelspec:
-  display_name: Python 3 (ipykernel)
+  name: plenoptic_venv
+  display_name: plenoptic_venv
   language: python
-  name: python3
 ---
 
 # Texture synthesis
@@ -17,8 +17,8 @@ kernelspec:
 import plenoptic as po
 import torch
 # needed for the plotting/animating:
-%matplotlib inline
 import matplotlib.pyplot as plt
+%matplotlib inline
 plt.rcParams['animation.html'] = 'html5'
 # use single-threaded ffmpeg for animation writer
 plt.rcParams['animation.writer'] = 'ffmpeg'
@@ -40,6 +40,9 @@ met.setup(im_init)
 met.synthesize(max_iter=500, store_progress=10,
                change_scale_criterion=None,
                ctf_iters_to_check=3)
+```
+
+```{code-cell} ipython3
 po.synth.metamer.plot_synthesis_status(met);
 ```
 
@@ -59,8 +62,10 @@ As we practiced earlier, we can change the target image for metamer synthesis st
 
 If you run the following lines, you can download some additional texture images used in the original Portilla and Simoncelli paper for use with the model:
 
-```{code-cell} ipython3
+If the following code gives you an error, make sure that `pooch` is installed in your virtual environment.
+:::
 
+```{code-cell} ipython3
 from plenoptic.data.fetch import fetch_data
 texture_path = fetch_data("portilla_simoncelli_images.tar.gz")
 
@@ -91,10 +96,6 @@ fig.suptitle("Artificial textures", y=1.05)
 fig = po.imshow(hand_drawn, col_wrap=4, title=None)
 fig.suptitle("Hand-drawn textures", y=1.05)
 ```
-
-If the above code gives you an error, make sure you have `pooch` installed in your virtual environment.
-
-:::
 
 ## Different initial image
 

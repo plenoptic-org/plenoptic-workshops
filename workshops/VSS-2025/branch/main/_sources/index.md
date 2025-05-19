@@ -125,8 +125,59 @@ Open up `powershell`, then:
 :::::::
 
 #### Install dependencies and setup notebooks
+
+1. Install pytorch. **Note** the way you do this will depend on whether you have a GPU or not. Getting pytorch working properly on a GPU can be a bit of a challenge, so if you try to install it to use with your GPU and it fails, try the CPU version.
+    ::::::{tab-set}
+    :sync-group: gpu
+
+    :::::{tab-item} cpu
+
+    ::::{tab-set}
+    :sync-group: category
     
-1. Install the required dependencies. This will install pynapple and nemos, as well as jupyter and several other packages.
+    :::{tab-item} uv
+    :sync: uv
+    
+    ```shell
+    uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+    ```
+    :::
+
+    :::{tab-item} conda
+    :sync: conda
+
+    ```shell
+    pip install torch  --index-url https://download.pytorch.org/whl/cpu
+    ```
+    :::
+    ::::
+    :::::
+
+    :::::{tab-item} gpu
+
+    ::::{tab-set}
+    :sync-group: category
+    
+    :::{tab-item} uv
+    :sync: uv
+    
+    ```shell
+    uv pip install torch
+    ```
+    :::
+
+    :::{tab-item} conda
+    :sync: conda
+
+    ```shell
+    pip install torch
+    ```
+    :::
+    ::::
+    :::::
+    ::::::
+    
+1. Install the rest of the dependencies. This will install plenoptic, as well as jupyter and several other packages.
     ::::{tab-set}
     :sync-group: category
     
